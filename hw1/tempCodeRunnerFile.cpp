@@ -1,1 +1,1 @@
-sys/socket.h
+(rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0

@@ -43,13 +43,17 @@ void *get_in_addr(struct sockaddr *sa)
 int main(void)
 {
     int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
-    struct addrinfo hints, *servinfo, *p;
+    struct addrinfo hints;
+    struct addrinfo *servinfo;
+    struct addrinfo *p;
     struct sockaddr_storage their_addr; // connector's address information
     socklen_t sin_size;
     struct sigaction sa;
     int yes=1;
     char s[INET6_ADDRSTRLEN];
     int rv;
+    int numbytes;  
+    char buf[100];
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
@@ -105,28 +109,37 @@ int main(void)
     }
 
     printf("server: waiting for connections...\n");
+    sin_size = sizeof their_addr;
+    new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
+
+    if (new_fd == -1) {
+        perror("accept");            
+    }
+
+    inet_ntop(their_addr.ss_family,
+        get_in_addr((struct sockaddr *)&their_addr),
+        s, sizeof s);
+    printf("server: got connection from %s\n", s);    
 
     while(1) {  // main accept() loop
-        sin_size = sizeof their_addr;
-        new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
-        if (new_fd == -1) {
-            perror("accept");
-            continue;
-        }
 
-        inet_ntop(their_addr.ss_family,
-            get_in_addr((struct sockaddr *)&their_addr),
-            s, sizeof s);
-        printf("server: got connection from %s\n", s);
 
-        if (!fork()) { // this is the child process
+        /*if (!fork()) { // this is the child process
             close(sockfd); // child doesn't need the listener
             if (send(new_fd, "Hello, world!", 13, 0) == -1)
                 perror("send");
             close(new_fd);
             exit(0);
         }
-        close(new_fd);  // parent doesn't need this
+        //close(new_fd);  // parent doesn't need this*/
+        if ((numbytes = recv(new_fd, buf, 100-1, 0)) == -1) {
+            perror("recv");
+            exit(1);
+        }
+
+        buf[numbytes] = '\0';
+
+        printf("client: received '%s'\n",buf);
     }
 
     return 0;
