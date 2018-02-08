@@ -1,1 +1,0 @@
-(rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0
