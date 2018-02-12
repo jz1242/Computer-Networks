@@ -12,7 +12,6 @@
 #include <iostream>
 #include <signal.h>
 #include <sys/time.h>
-#include <time.h>
 
 #define BACKLOG 10
 #define MAXSIZE 1000
@@ -53,7 +52,7 @@ int main(int argc, char** argv){
   char* port;
   int isServer = 0;
   char* host;
-  time_t timer; 
+  double timer; 
 	char buf[MAXSIZE];
   int numbytes;
   long totalbytes = 0;
@@ -92,7 +91,7 @@ int main(int argc, char** argv){
       }
       host = argv[3];
       port = argv[5];
-      timer = atoi(argv[7]);
+      timer = atof(argv[7]);
       if(atoi(port) < 1023 || atoi(port) > 65535){
         printf("Error: port number must be in the range 1024 to 65535\n");
         return 0;
@@ -172,10 +171,12 @@ int main(int argc, char** argv){
         close(new_fd);
         close(sockfd);
         numbytes -= 3; 
-        printf("Total Kb = %ld\n", totalbytes/1000);
+        printf("recieved=%ld KB\n", totalbytes/1000);
         printf ("Total time = %f seconds\n",
+                (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
                 (double) (tv2.tv_sec - tv1.tv_sec));
-        printf("Rate = %lf\n", ((8*totalbytes)/1000000)/(double) (tv2.tv_sec - tv1.tv_sec));
+        printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
+            (double) (tv2.tv_sec - tv1.tv_sec)));
         return 0;
       }
 
@@ -229,22 +230,23 @@ int main(int argc, char** argv){
 
     freeaddrinfo(servinfo); // all done with this structure
     gettimeofday(&tv1, NULL);
-    time_t start = time(NULL);
-    time_t end = start + timer;
-    while(start < end){
+    gettimeofday(&tv2, NULL);
+    while(((double) (tv2.tv_usec - tv1.tv_usec) / 1000000 + (double) (tv2.tv_sec - tv1.tv_sec)) < timer){
       numbytes = send(sockfd, bufsend, MAXSIZE, 0);
       totalbytes += numbytes;
-      start = time(NULL);
+      gettimeofday(&tv2, NULL);
       //printf("loop time is : %s", ctime(&start));
     }
     numbytes = send(sockfd, "FIN", 3, 0);
     numbytes = recv(sockfd, buf, MAXSIZE, 0);
     buf[numbytes] = '\0';
     gettimeofday(&tv2, NULL);
-    printf("Total Kb = %ld\n", totalbytes/1000);
+    printf("sent=%ld Kb \n", totalbytes/1000);
     printf ("Total time = %f seconds\n",
-                (double) (tv2.tv_sec - tv1.tv_sec));
-    printf("Rate = %lf\n", ((8*totalbytes)/1000000)/(double) (tv2.tv_sec - tv1.tv_sec));
+            (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
+            (double) (tv2.tv_sec - tv1.tv_sec));
+    printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
+            (double) (tv2.tv_sec - tv1.tv_sec)));
     close(sockfd);
 
     return 0;
