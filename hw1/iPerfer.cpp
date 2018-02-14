@@ -165,9 +165,11 @@ int main(int argc, char** argv){
     printf("server: got connection from %s\n", s);  
     gettimeofday(&tv1, NULL);
     while(1) {  // main accept() loop  
-      if(strcmp(buf, "FIN") == 0){
+      if(buf[numbytes - 1] == '1'){
         gettimeofday(&tv2, NULL);
-        numbytes = send(new_fd, "ACK", 3, 0);
+        char end[MAXSIZE];
+        memset(end, '1', sizeof(end));
+        numbytes = send(new_fd, end, MAXSIZE, 0);
         close(new_fd);
         close(sockfd);
         numbytes -= 3; 
@@ -237,17 +239,21 @@ int main(int argc, char** argv){
       gettimeofday(&tv2, NULL);
       //printf("loop time is : %s", ctime(&start));
     }
-    numbytes = send(sockfd, "FIN", 3, 0);
+    char end[MAXSIZE];
+    memset(end, '1', sizeof(end));
+    numbytes = send(sockfd, end, MAXSIZE, 0);
     numbytes = recv(sockfd, buf, MAXSIZE, 0);
     buf[numbytes] = '\0';
-    gettimeofday(&tv2, NULL);
-    printf("sent=%ld Kb \n", totalbytes/1000);
-    printf ("Total time = %f seconds\n",
-            (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
-            (double) (tv2.tv_sec - tv1.tv_sec));
-    printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
-            (double) (tv2.tv_sec - tv1.tv_sec)));
-    close(sockfd);
+    if(buf[numbytes - 1] == '1'){
+      gettimeofday(&tv2, NULL);
+      printf("sent=%ld Kb \n", totalbytes/1000);
+      printf ("Total time = %f seconds\n",
+              (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
+              (double) (tv2.tv_sec - tv1.tv_sec));
+      printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
+              (double) (tv2.tv_sec - tv1.tv_sec)));
+      close(sockfd);
+    }
 
     return 0;
   }
