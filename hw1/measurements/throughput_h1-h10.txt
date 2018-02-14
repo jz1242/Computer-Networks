@@ -1,0 +1,2 @@
+rate=10.439510 Mbps
+rate=10.386018 Mbps
