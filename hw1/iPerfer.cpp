@@ -242,18 +242,21 @@ int main(int argc, char** argv){
     char end[MAXSIZE];
     memset(end, '1', sizeof(end));
     numbytes = send(sockfd, end, MAXSIZE, 0);
-    numbytes = recv(sockfd, buf, MAXSIZE, 0);
-    buf[numbytes] = '\0';
-    if(buf[numbytes - 1] == '1'){
-      gettimeofday(&tv2, NULL);
-      printf("sent=%ld Kb \n", totalbytes/1000);
-      printf ("Total time = %f seconds\n",
-              (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
-              (double) (tv2.tv_sec - tv1.tv_sec));
-      printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
-              (double) (tv2.tv_sec - tv1.tv_sec)));
-      close(sockfd);
+    while(1){
+      numbytes = recv(sockfd, buf, MAXSIZE, 0);
+      if(buf[numbytes - 1] == '1'){
+        break;
+      }
+
     }
+    gettimeofday(&tv2, NULL);
+    printf("sent=%ld Kb \n", totalbytes/1000);
+    printf ("Total time = %f seconds\n",
+            (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
+            (double) (tv2.tv_sec - tv1.tv_sec));
+    printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
+            (double) (tv2.tv_sec - tv1.tv_sec)));
+    close(sockfd);
 
     return 0;
   }
