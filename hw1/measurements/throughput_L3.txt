@@ -1,2 +1,9 @@
-rate=28.378720 Mbps
-rate=28.307669 Mbps
+server: waiting for connections...
+server: got connection from 10.0.0.7
+recieved=81120 KB
+Total time = 22.915325 seconds
+rate=28.278019 Mbps
+client: connecting to 10.0.0.3
+sent=81120 Kb 
+Total time = 22.975883 seconds
+rate=28.203486 Mbps
