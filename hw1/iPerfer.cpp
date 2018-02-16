@@ -26,7 +26,7 @@ void *get_in_addr(struct sockaddr *sa)
 }
 
 int main(int argc, char** argv){
-  struct timeval  tv1, tv2;
+  struct timeval  time_1, time_2;
   int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
 	struct addrinfo hints, *servinfo, *p;
 	struct sockaddr_storage their_addr; // connector's address information
@@ -124,10 +124,10 @@ int main(int argc, char** argv){
     sin_size = sizeof their_addr;
     new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
     inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), s, sizeof s);
-    gettimeofday(&tv1, NULL);
+    gettimeofday(&time_1, NULL);
     while(1) {
       if(buf[numbytes - 1] == '1'){
-        gettimeofday(&tv2, NULL);
+        gettimeofday(&time_2, NULL);
         char end[MAXSIZE];
         memset(end, '1', sizeof(end));
         numbytes = send(new_fd, end, MAXSIZE, 0);
@@ -135,11 +135,8 @@ int main(int argc, char** argv){
         close(sockfd);
         numbytes -= 3; 
         printf("recieved=%ld KB\n", totalbytes/1000);
-        printf ("Total time = %f seconds\n",
-                (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
-                (double) (tv2.tv_sec - tv1.tv_sec));
-        printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
-            (double) (tv2.tv_sec - tv1.tv_sec)));
+        printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (time_2.tv_usec - time_1.tv_usec) / 1000000 +
+            (double) (time_2.tv_sec - time_1.tv_sec)));
         return 0;
       }
 
@@ -182,13 +179,13 @@ int main(int argc, char** argv){
 
     inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr), s, sizeof s);
 
-    freeaddrinfo(servinfo); // all done with this structure
-    gettimeofday(&tv1, NULL);
-    gettimeofday(&tv2, NULL);
-    while(((double) (tv2.tv_usec - tv1.tv_usec) / 1000000 + (double) (tv2.tv_sec - tv1.tv_sec)) < timer){
+    freeaddrinfo(servinfo); 
+    gettimeofday(&time_1, NULL);
+    gettimeofday(&time_2, NULL);
+    while(((double) (time_2.tv_usec - time_1.tv_usec) / 1000000 + (double) (time_2.tv_sec - time_1.tv_sec)) < timer){
       numbytes = send(sockfd, bufsend, MAXSIZE, 0);
       totalbytes += numbytes;
-      gettimeofday(&tv2, NULL);
+      gettimeofday(&time_2, NULL);
     }
     char end[MAXSIZE];
     memset(end, '1', sizeof(end));
@@ -200,13 +197,10 @@ int main(int argc, char** argv){
       }
 
     }
-    gettimeofday(&tv2, NULL);
+    gettimeofday(&time_2, NULL);
     printf("sent=%ld Kb \n", totalbytes/1000);
-    printf ("Total time = %f seconds\n",
-            (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
-            (double) (tv2.tv_sec - tv1.tv_sec));
-    printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
-            (double) (tv2.tv_sec - tv1.tv_sec)));
+    printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (time_2.tv_usec - time_1.tv_usec) / 1000000 +
+            (double) (time_2.tv_sec - time_1.tv_sec)));
     close(sockfd);
 
     return 0;
