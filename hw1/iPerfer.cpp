@@ -134,7 +134,7 @@ int main(int argc, char** argv){
         close(new_fd);
         close(sockfd);
         totalbytes -= numbytes;
-        printf("recieved=%ld KB\n", totalbytes/1000);
+        printf("recieved=%ld KB ", totalbytes/1000);
         printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (time_2.tv_usec - time_1.tv_usec) / 1000000 +
             (double) (time_2.tv_sec - time_1.tv_sec)));
         return 0;
@@ -198,7 +198,7 @@ int main(int argc, char** argv){
 
     }
     gettimeofday(&time_2, NULL);
-    printf("sent=%ld KB \n", totalbytes/1000);
+    printf("sent=%ld KB ", totalbytes/1000);
     printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (time_2.tv_usec - time_1.tv_usec) / 1000000 +
             (double) (time_2.tv_sec - time_1.tv_sec)));
     close(sockfd);

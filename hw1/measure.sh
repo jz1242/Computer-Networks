@@ -41,15 +41,15 @@ h1 wait
 h10 wait
 
 h1 echo "\h1 -> \h6, \h2 -> \h9 - 2 Pair Multiplexing RTT of links with ping..."
-h1 ping h6 -c 20 | tail -n 2 &
+h1 ping h6 -c 20 | tail -n 2 >> ./measurements/latency_Q3_1.txt &
 h2 ping h9 -c 20 | tail -n 2 >> ./measurements/latency_Q3_1.txt
 
 h1 wait 
 h2 wait
 
 h1 echo "\h1 -> \h6, \h2 -> \h9, \h5 -> \h10 - 3 Pair Multiplexing RTT of links with ping..."
-h1 ping h6 -c 20 | tail -n 2 &
-h2 ping h9 -c 20 | tail -n 2 &
+h1 ping h6 -c 20 | tail -n 2 >> ./measurements/latency_Q3_2.txt &
+h2 ping h9 -c 20 | tail -n 2 >> ./measurements/latency_Q3_2.txt &
 h5 ping h10 -c 20 | tail -n 2 >> ./measurements/latency_Q3_2.txt
 
 h1 wait 
@@ -58,8 +58,8 @@ h5 wait
 
 h1 echo "\h1 -> \h6, \h2 -> \h9 - 2 Pair Multiplexing throughput test from \s1 to \s6..."
 h1 ./iPerfer -s -p 2006 &
-h2 ./iPerfer -s -p 2007 >> ./measurements/throughput_Q3_1.txt &
-h6 ./iPerfer -c -h 10.0.0.1 -p 2006 -t 20  &
+h2 ./iPerfer -s -p 2007 &
+h6 ./iPerfer -c -h 10.0.0.1 -p 2006 -t 20  >> ./measurements/throughput_Q3_1.txt &
 h9 ./iPerfer -c -h 10.0.0.2 -p 2007 -t 20 >> ./measurements/throughput_Q3_1.txt 
 
 h1 wait 
@@ -70,9 +70,9 @@ h9 wait
 h1 echo "\h1 -> \h6, \h2 -> \h9, \h5 -> \h10 - 3 Pair Multiplexing throughput test from \s1 to \s6..."
 h1 ./iPerfer -s -p 2008 &
 h2 ./iPerfer -s -p 2009 &
-h5 ./iPerfer -s -p 2010 >> ./measurements/throughput_Q3_2.txt &
-h6 ./iPerfer -c -h 10.0.0.1 -p 2008 -t 20 &
-h9 ./iPerfer -c -h 10.0.0.2 -p 2009 -t 20 &
+h5 ./iPerfer -s -p 2010 &
+h6 ./iPerfer -c -h 10.0.0.1 -p 2008 -t 20 >> ./measurements/throughput_Q3_2.txt &
+h9 ./iPerfer -c -h 10.0.0.2 -p 2009 -t 20 >> ./measurements/throughput_Q3_2.txt &
 h10 ./iPerfer -c -h 10.0.0.5 -p 2010 -t 20 >> ./measurements/throughput_Q3_2.txt 
 
 h1 wait 
