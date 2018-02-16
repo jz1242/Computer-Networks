@@ -1,9 +1,4 @@
-server: waiting for connections...
-server: got connection from 10.0.0.3
-recieved=58575 KB
-Total time = 26.401957 seconds
-rate=17.725959 Mbps
-client: connecting to 10.0.0.1
-sent=58575 Kb 
-Total time = 26.482164 seconds
-rate=17.672272 Mbps
+recieved=57205 KB
+rate=18.788336 Mbps
+sent=57206 KB 
+rate=18.726865 Mbps
