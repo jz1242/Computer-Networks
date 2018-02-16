@@ -133,7 +133,7 @@ int main(int argc, char** argv){
         numbytes = send(new_fd, end, MAXSIZE, 0);
         close(new_fd);
         close(sockfd);
-        numbytes -= 3; 
+        totalbytes -= numbytes;
         printf("recieved=%ld KB\n", totalbytes/1000);
         printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (time_2.tv_usec - time_1.tv_usec) / 1000000 +
             (double) (time_2.tv_sec - time_1.tv_sec)));
