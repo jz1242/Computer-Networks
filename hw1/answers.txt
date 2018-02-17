@@ -1,0 +1,53 @@
+2)    Predicted throughput: 18.8 Mbps
+      Predicted latency: 124.2 ms
+      Actual throughput: 18.674263 Mbps
+      Actual latency: 123.253 ms
+      Explanation of results:
+      The throughput prediction was from looking at the throughput at the links used in this connection which was L1, L2, L4, L5. L1 had the least
+      throughput at 18.8 which means that my connection was bottlenecked at around 18.8 Mbps. My results correlated with that prediction as we got
+      a throughput of 18.67 Mbps. The latency calculation was a summation of all of the latencies of the links because each link that the connection uses
+      will have an associated latency that adds together for the total latency of the connection. In this connection, the latencies added up gave me 
+      124.2 ms. The actual latency was around 123.25 ms which corrleates with the prediction.
+
+
+3.1)  Predicted throughput: 10 Mbps for each connection
+      Predicted latency: 124.2 ms for each connection
+      Actual throughput: From h1 to h6 11.5 Mbps From h2 to h9 7.2 Mbps
+      Actual latency: From h1 to h6 122.7 ms From h2 to h9 122.7 ms
+      Explanation of results:
+      The throughput prediction was from looking at the throughput at the links used in this connection. Both these connections shared the links
+      L1 L2 L4 L5 with a bottleneck at L1 which transferred at around 19 Mbps. Since we have two concurrent connections we can expect that the 
+      bandwidth is shared between the connections. Thus I expected the throughput for the connections to be around half of the total bandwidth which is
+      about 10 Mbps. The actual throughput was 11.5 Mbps for h1 to h6 and 7.2 Mbps from h2 to h9 which is close to my prediction, and the total throughput
+      sum does not exceed 19 Mbps which is around the max bandwidth for L1. They are not exactly 10 Mbps for each connection because bandwidth allocation
+      is not exactly half for connections. Sometimes we might see one connection dominate most of the bandwidth and other connections only get a small sliver
+      of the available bandwidth. The latency calculation was from adding up the individual latencies of each of the traveled links. Since both of the connections
+      use these links and each link has an associated latency, the sum of all of the individual latencies should be around what the actual latency is. My results
+      show that the actual latency of the connections was 122.7 ms for both connections, which is in line with my prediction.
+
+3.2)  Predicted throughput: 6.3 Mbps all connections.
+      Predicted latency: 124.2 ms for each connect
+      Actual throughput: From h1 to h6 8.5 Mbps, From h2 to h9 4.94 Mbps, From h5 to h10 5.53 Mbps
+      Actual latency: From h1 to h6 122.5 ms, From h2 to h9 122 ms, From h5 to h10 122 ms
+      Explanation of results:
+      Similar to part 3.1, my predicted throughput was because the bottleneck for the three connections is at L1 which has a throughput of about 19 Mbps.
+      Since three connections must share this link, then the bandwidth must be divided almost equally to accommodate all the connections which led me to predict
+      6.3 Mbps. The actual throughput was 8.5 Mbps for h1 to h6, 4.94 Mbps for h2 to h9, and 5.53 Mbps for h5 to h10. This is in line with my prediction in that
+      each of them are close to 6.3 Mbps. The reason that they are not exactly 6.3 Mbps each is because badnwidth allocation is not perfect for each connection, meaning
+      one connection might have more and one might have less. For latency since all three connections share the same links, then I predicted that the latency is the sum
+      of all of the individual links latencies which is around 124.2 ms. The actual latency was about 122 for all three connections which is in line with my prediction and
+      this is because all the connections use these links and thus the latency for each connection must be around the summation of all of the links latencies.
+
+4)    Predicted throughput: 12 Mbps for h1 to h10, 12 Mbps for h3 to h8
+      Predicted latency: From h1 to h10 124.2 ms, From h3 to h8 32.2 ms
+      Actual throughput: 10.21 Mbps for h1 to h10, 32.3 Mbps for h3 to h8
+      Actual latency: 122.6 ms for h1 to h10, 31.7 ms for h3 to h8
+      Explanation of results:
+      For throughput I predicted that each connection would transfer at about 12 Mbps because they share a connection at L2 and L4 and the bottleneck happens to be at 
+      L4 which has a throughput of about 24 Mbps. Since two connections share that same link, I expected a near even split of bandwidth at that link, thus I predicted 12 Mbps.
+      The actual throughput was 10.21 Mbps for h1 to h10 and 13.7 Mbps for h3 to h8, which is in line with my prediction as both are around 12 Mbps transfer rate. The only reason
+      the throughput were not exactly 12 Mbps is because bandwidth allocation is not exact, so we might not get the perfect even split of bandwidth for both connections.
+      For latency, the connection from h1 to h10, I predicted to have 124.2 ms latency because h1 to h10 uses links L1 L2 L4 L5 which each have their own associated latencies,
+      the total latency of the connection should be the summation of all of the individual latencies which led me to 124.4 Mbps. The connection from h3 to h8 used links L2 and L4 
+      and thus the total latency should be the summation of each links associated latency which is around 31.7 Mbps. The actual results were 122.6 ms for h1 to h10 and 31.7 ms for 
+      h3 and h8. Both are in line with my predictions with only a minor difference. 
