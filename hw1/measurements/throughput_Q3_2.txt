@@ -1,4 +1,3 @@
-recieved=17653 KB
-rate=5.105787 Mbps
-sent=17654 KB 
-rate=5.083085 Mbps
+sent=29904 KB rate=8.525552 Mbps
+sent=17654 KB rate=4.943726 Mbps
+sent=19804 KB rate=5.537711 Mbps
