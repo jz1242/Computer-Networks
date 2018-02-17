@@ -44,5 +44,4 @@ if __name__ == '__main__':
 
     # Run network
     net.start()
-    CLI( net , script='measure.sh' )
     net.stop()
