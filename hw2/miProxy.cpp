@@ -54,70 +54,68 @@ int main(int argc, char** argv){
   alpha = atof(argv[2]);
   port = argv[3];
   ip = argv[4];
-  /*if(isServer){
     
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;
+  memset(&hints, 0, sizeof hints);
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_STREAM;
+  hints.ai_flags = AI_PASSIVE;
 
-    rv = getaddrinfo(NULL, port, &hints, &servinfo);
+  rv = getaddrinfo(NULL, port, &hints, &servinfo);
 
-    for(p = servinfo; p != NULL; p = p->ai_next) {
-        if ((sockfd = socket(p->ai_family, p->ai_socktype,
-                p->ai_protocol)) == -1) {
-            perror("server: socket");
-            continue;
-        }
-
-        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes,
-                sizeof(int)) == -1) {
-            perror("setsockopt");
-            exit(1);
-        }
-
-        if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-            close(sockfd);
-            perror("server: bind");
-            continue;
-        }
-        break;
-    }
-
-    freeaddrinfo(servinfo);
-
-    if (p == NULL)  {
-        exit(1);
-    }
-
-    listen(sockfd, BACKLOG);
-    sin_size = sizeof their_addr;
-    new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
-    inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), s, sizeof s);
-    gettimeofday(&time_1, NULL);
-    while(1) {
-      if(buf[numbytes - 1] == '1'){
-        gettimeofday(&time_2, NULL);
-        char end[MAXSIZE];
-        memset(end, '1', sizeof(end));
-        numbytes = send(new_fd, end, MAXSIZE, 0);
-        close(new_fd);
-        close(sockfd);
-        totalbytes -= numbytes;
-        printf("recieved=%ld KB ", totalbytes/1000);
-        printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (time_2.tv_usec - time_1.tv_usec) / 1000000 +
-            (double) (time_2.tv_sec - time_1.tv_sec)));
-        return 0;
+  for(p = servinfo; p != NULL; p = p->ai_next) {
+      if ((sockfd = socket(p->ai_family, p->ai_socktype,
+              p->ai_protocol)) == -1) {
+          perror("server: socket");
+          continue;
       }
 
-      numbytes = recv(new_fd, buf, MAXSIZE, 0);
-      buf[numbytes] = '\0';
-      totalbytes += numbytes;
+      if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes,
+              sizeof(int)) == -1) {
+          perror("setsockopt");
+          exit(1);
+      }
 
-    }
-            
+      if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+          close(sockfd);
+          perror("server: bind");
+          continue;
+      }
+      break;
   }
-  else{
+
+  freeaddrinfo(servinfo);
+
+  if (p == NULL)  {
+      exit(1);
+  }
+
+  listen(sockfd, BACKLOG);
+  sin_size = sizeof their_addr;
+  new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
+  inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), s, sizeof s);
+  gettimeofday(&time_1, NULL);
+  while(1) {
+    if(buf[numbytes - 1] == '1'){
+      gettimeofday(&time_2, NULL);
+      char end[MAXSIZE];
+      memset(end, '1', sizeof(end));
+      numbytes = send(new_fd, end, MAXSIZE, 0);
+      close(new_fd);
+      close(sockfd);
+      totalbytes -= numbytes;
+      printf("recieved=%ld KB ", totalbytes/1000);
+      printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (time_2.tv_usec - time_1.tv_usec) / 1000000 +
+          (double) (time_2.tv_sec - time_1.tv_sec)));
+      return 0;
+    }
+
+    numbytes = recv(new_fd, buf, MAXSIZE, 0);
+    buf[numbytes] = '\0';
+    totalbytes += numbytes;
+
+  }
+            
+  /*else{
     char bufsend[MAXSIZE];
     memset(bufsend, '0', sizeof(bufsend));
     memset(&hints, 0, sizeof hints);
