@@ -53,9 +53,9 @@ int main(int argc, char** argv){
   logPath = argv[1];
   alpha = atof(argv[2]);
   port = argv[3];
-  ip = argv[4];
+  host = argv[4];
     
-  memset(&hints, 0, sizeof hints);
+  /*memset(&hints, 0, sizeof hints);
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_flags = AI_PASSIVE;
@@ -115,62 +115,62 @@ int main(int argc, char** argv){
 
   }
             
-  /*else{
-    char bufsend[MAXSIZE];
-    memset(bufsend, '0', sizeof(bufsend));
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    
-    rv = getaddrinfo(argv[3], port, &hints, &servinfo);
+  else{*/
+  char bufsend[MAXSIZE];
+  memset(bufsend, '0', sizeof(bufsend));
+  memset(&hints, 0, sizeof hints);
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_STREAM;
+  
+  rv = getaddrinfo(host, port, &hints, &servinfo);
 
-    for(p = servinfo; p != NULL; p = p->ai_next) {
-      if ((sockfd = socket(p->ai_family, p->ai_socktype,
-          p->ai_protocol)) == -1) {
-        perror("client: socket");
-        continue;
-      }
+  for(p = servinfo; p != NULL; p = p->ai_next) {
+    if ((sockfd = socket(p->ai_family, p->ai_socktype,
+        p->ai_protocol)) == -1) {
+      perror("client: socket");
+      continue;
+    }
 
-      if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-        perror("client: connect");
-        close(sockfd);
-        continue;
-      }
+    if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+      perror("client: connect");
+      close(sockfd);
+      continue;
+    }
 
+    break;
+  }
+
+  if (p == NULL) {
+    fprintf(stderr, "client: failed to connect\n");
+    return 2;
+  }
+
+  inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr), s, sizeof s);
+
+  freeaddrinfo(servinfo); 
+  gettimeofday(&time_1, NULL);
+  gettimeofday(&time_2, NULL);
+  while(((double) (time_2.tv_usec - time_1.tv_usec) / 1000000 + (double) (time_2.tv_sec - time_1.tv_sec)) < timer){
+    numbytes = send(sockfd, bufsend, MAXSIZE, 0);
+    totalbytes += numbytes;
+    gettimeofday(&time_2, NULL);
+  }
+  char end[MAXSIZE];
+  memset(end, '1', sizeof(end));
+  numbytes = send(sockfd, end, MAXSIZE, 0);
+  while(1){
+    numbytes = recv(sockfd, buf, MAXSIZE, 0);
+    if(buf[numbytes - 1] == '1'){
       break;
     }
 
-    if (p == NULL) {
-      fprintf(stderr, "client: failed to connect\n");
-      return 2;
-    }
+  }
+  gettimeofday(&time_2, NULL);
+  printf("sent=%ld KB ", totalbytes/1000);
+  printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (time_2.tv_usec - time_1.tv_usec) / 1000000 +
+          (double) (time_2.tv_sec - time_1.tv_sec)));
+  close(sockfd);
 
-    inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr), s, sizeof s);
-
-    freeaddrinfo(servinfo); 
-    gettimeofday(&time_1, NULL);
-    gettimeofday(&time_2, NULL);
-    while(((double) (time_2.tv_usec - time_1.tv_usec) / 1000000 + (double) (time_2.tv_sec - time_1.tv_sec)) < timer){
-      numbytes = send(sockfd, bufsend, MAXSIZE, 0);
-      totalbytes += numbytes;
-      gettimeofday(&time_2, NULL);
-    }
-    char end[MAXSIZE];
-    memset(end, '1', sizeof(end));
-    numbytes = send(sockfd, end, MAXSIZE, 0);
-    while(1){
-      numbytes = recv(sockfd, buf, MAXSIZE, 0);
-      if(buf[numbytes - 1] == '1'){
-        break;
-      }
-
-    }
-    gettimeofday(&time_2, NULL);
-    printf("sent=%ld KB ", totalbytes/1000);
-    printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (time_2.tv_usec - time_1.tv_usec) / 1000000 +
-            (double) (time_2.tv_sec - time_1.tv_sec)));
-    close(sockfd);
-
-    return 0;
-  }*/
+  return 0;
+  //}*/
 } 
