@@ -14,7 +14,7 @@
 #include <sys/time.h>
 
 #define BACKLOG 10
-#define MAXSIZE 1000
+#define MAXSIZE 32000
 
 void *get_in_addr(struct sockaddr *sa)
 {
@@ -95,7 +95,7 @@ int main(int argc, char** argv){
   gettimeofday(&time_1, NULL);
   printf("Recieved connection\n");
   while(1){
-    numbytes = recv(new_fd, buf, ~0L, 0);
+    numbytes = recv(new_fd, buf, MAXSIZE, 0);
     buf[numbytes] = '\0';
     printf("%s\n", buf);
   }
