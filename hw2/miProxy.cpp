@@ -94,8 +94,9 @@ int main(int argc, char** argv){
   new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
   inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), s, sizeof s);
   gettimeofday(&time_1, NULL);
+  printf("Recieved connection\n");
   while(1) {
-    if(buf[numbytes - 1] == '1'){
+    /*if(buf[numbytes - 1] == '1'){
       gettimeofday(&time_2, NULL);
       char end[MAXSIZE];
       memset(end, '1', sizeof(end));
@@ -107,10 +108,11 @@ int main(int argc, char** argv){
       printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (time_2.tv_usec - time_1.tv_usec) / 1000000 +
           (double) (time_2.tv_sec - time_1.tv_sec)));
       return 0;
-    }
+    }*/
 
     numbytes = recv(new_fd, buf, MAXSIZE, 0);
     buf[numbytes] = '\0';
+    printf("%s\n", buf);
     totalbytes += numbytes;
 
   }
