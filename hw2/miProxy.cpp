@@ -154,6 +154,7 @@ int main(int argc, char** argv){
   gettimeofday(&time_2, NULL);
   char end[MAXSIZE];
   memset(end, '1', sizeof(end));
+  numbytes = send(sockfd, end, MAXSIZE, 0);
   while(1) {
     if(buf[numbytes - 1] == '1'){
       gettimeofday(&time_2, NULL);
