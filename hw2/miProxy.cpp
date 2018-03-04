@@ -44,7 +44,6 @@ int main(int argc, char** argv){
   long totalbytes = 0;
   char* logPath;
   float alpha;
-  char* ip;
 
   if(argc < 5 || argc > 5){
     printf("Error, arguments not right\n");
@@ -55,7 +54,7 @@ int main(int argc, char** argv){
   port = argv[3];
   host = argv[4];
     
-  /*memset(&hints, 0, sizeof hints);
+  memset(&hints, 0, sizeof hints);
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_flags = AI_PASSIVE;
@@ -96,7 +95,7 @@ int main(int argc, char** argv){
   gettimeofday(&time_1, NULL);
   printf("Recieved connection\n");
   while(1) {
-    /*if(buf[numbytes - 1] == '1'){
+      if(buf[numbytes - 1] == '1'){
       gettimeofday(&time_2, NULL);
       char end[MAXSIZE];
       memset(end, '1', sizeof(end));
@@ -117,7 +116,7 @@ int main(int argc, char** argv){
 
   }
             
-  else{*/
+  /*else{
   char bufsend[MAXSIZE];
   memset(bufsend, '0', sizeof(bufsend));
   memset(&hints, 0, sizeof hints);
@@ -152,9 +151,12 @@ int main(int argc, char** argv){
   freeaddrinfo(servinfo); 
   gettimeofday(&time_1, NULL);
   gettimeofday(&time_2, NULL);
-  char end[MAXSIZE];
-  memset(end, '1', sizeof(end));
+  char end[MAXSIZE] = "here"; 
+  //memset(end, '1', sizeof(end));
   numbytes = send(sockfd, end, MAXSIZE, 0);
+  numbytes = recv(sockfd, buf, MAXSIZE, 0);
+  buf[numbytes] = '\0';
+  printf("%s\n", buf);
   while(1) {
     if(buf[numbytes - 1] == '1'){
       gettimeofday(&time_2, NULL);
@@ -182,5 +184,5 @@ int main(int argc, char** argv){
   close(sockfd);
 
   return 0;
-  //}*/
+  }*/
 } 
