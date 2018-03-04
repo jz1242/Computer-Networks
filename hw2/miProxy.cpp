@@ -168,7 +168,7 @@ int main(int argc, char** argv){
       return 0;
     }
 
-    numbytes = recv(sock_fd, buf, MAXSIZE, 0);
+    numbytes = recv(sockfd, buf, MAXSIZE, 0);
     buf[numbytes] = '\0';
     printf("%s\n", buf);
     totalbytes += numbytes;
