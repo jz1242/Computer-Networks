@@ -94,6 +94,36 @@ int main(int argc, char** argv){
   inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), s, sizeof s);
   gettimeofday(&time_1, NULL);
   printf("Recieved connection\n");
+  memset(&hints, 0, sizeof hints);
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_STREAM;
+  
+  rv = getaddrinfo(host, port, &hints, &servinfo);
+
+  for(p = servinfo; p != NULL; p = p->ai_next) {
+    if ((sockfd = socket(p->ai_family, p->ai_socktype,
+        p->ai_protocol)) == -1) {
+      perror("client: socket");
+      continue;
+    }
+
+    if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+      perror("client: connect");
+      close(sockfd);
+      continue;
+    }
+
+    break;
+  }
+
+  if (p == NULL) {
+    fprintf(stderr, "client: failed to connect\n");
+    return 2;
+  }
+
+  inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr), s, sizeof s);
+
+  freeaddrinfo(servinfo); 
   while(1){
     numbytes = recv(new_fd, buf, MAXSIZE, 0);
     buf[numbytes] = '\0';
