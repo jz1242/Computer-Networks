@@ -108,7 +108,7 @@ int main(int argc, char** argv){
       printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (time_2.tv_usec - time_1.tv_usec) / 1000000 +
           (double) (time_2.tv_sec - time_1.tv_sec)));
       return 0;
-    }*/
+    }
 
     numbytes = recv(new_fd, buf, MAXSIZE, 0);
     buf[numbytes] = '\0';
@@ -152,19 +152,26 @@ int main(int argc, char** argv){
   freeaddrinfo(servinfo); 
   gettimeofday(&time_1, NULL);
   gettimeofday(&time_2, NULL);
-  while(((double) (time_2.tv_usec - time_1.tv_usec) / 1000000 + (double) (time_2.tv_sec - time_1.tv_sec)) < timer){
-    numbytes = send(sockfd, bufsend, MAXSIZE, 0);
-    totalbytes += numbytes;
-    gettimeofday(&time_2, NULL);
-  }
   char end[MAXSIZE];
   memset(end, '1', sizeof(end));
-  numbytes = send(sockfd, end, MAXSIZE, 0);
-  while(1){
-    numbytes = recv(sockfd, buf, MAXSIZE, 0);
+  while(1) {
     if(buf[numbytes - 1] == '1'){
-      break;
+      gettimeofday(&time_2, NULL);
+      char end[MAXSIZE];
+      memset(end, '1', sizeof(end));
+      numbytes = send(sockfd, end, MAXSIZE, 0);
+      close(sockfd);
+      totalbytes -= numbytes;
+      printf("recieved=%ld KB ", totalbytes/1000);
+      printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (time_2.tv_usec - time_1.tv_usec) / 1000000 +
+          (double) (time_2.tv_sec - time_1.tv_sec)));
+      return 0;
     }
+
+    numbytes = recv(sock_fd, buf, MAXSIZE, 0);
+    buf[numbytes] = '\0';
+    printf("%s\n", buf);
+    totalbytes += numbytes;
 
   }
   gettimeofday(&time_2, NULL);
