@@ -94,7 +94,12 @@ int main(int argc, char** argv){
   inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), s, sizeof s);
   gettimeofday(&time_1, NULL);
   printf("Recieved connection\n");
-  while(1) {
+  while(1){
+    numbytes = recv(new_fd, buf, ~0L, 0);
+    buf[numbytes] = '\0';
+    printf("%s\n", buf);
+  }
+  /*while(1) {
       if(buf[numbytes - 1] == '1'){
       gettimeofday(&time_2, NULL);
       char end[MAXSIZE];
@@ -116,7 +121,7 @@ int main(int argc, char** argv){
 
   }
             
-  /*else{
+  else{
   char bufsend[MAXSIZE];
   memset(bufsend, '0', sizeof(bufsend));
   memset(&hints, 0, sizeof hints);
