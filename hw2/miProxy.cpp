@@ -10,9 +10,8 @@ int main(int argc, char** argv){
   float alpha = atof(argv[2]);
   char* port = argv[3];
   char* host = argv[4];
-  Proxy *newProxy = new Proxy(logPath, alpha, port, host);
-  newProxy->setConnection();
-  newProxy->runProxy();
-  delete newProxy;
+  Proxy newProxy = Proxy(logPath, alpha, port, host);
+  newProxy.setConnection();
+  newProxy.runProxy();
   return 0;
 } 

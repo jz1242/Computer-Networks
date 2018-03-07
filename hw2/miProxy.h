@@ -19,23 +19,10 @@
 #define APMAX 32000
 const char* apache = "80";
 
-
 class Proxy{
 private:
   struct timeval  time_1, time_2;
   int sockProx, sockBrow, sockServ;
-  struct addrinfo hints, *servinfo, *p;
-  struct addrinfo hints2, *servinfo2, *p2;
-  struct sockaddr_storage their_addr; // connector's address information
-  struct sockaddr_storage their_addr2;
-  socklen_t sin_size;
-  struct sigaction sa;
-  socklen_t sin_size2;
-  struct sigaction sa2;
-  char s[INET6_ADDRSTRLEN];
-  char s2[INET6_ADDRSTRLEN];
-  int yes=1;
-  int rv;
   char* port;
   char* host;
   double timer; 
@@ -43,13 +30,24 @@ private:
   char resp[MAXSIZE];
   int numbytesreq;
   int numbytesresp;
-  long totalbytes = 0;
   char* logPath;
   float alpha;
 public:
     Proxy(char* logInp, float alphaInp, char* portInp, char* hostInp):logPath(logInp), alpha(alphaInp), port(portInp), host(hostInp){}
 
     void setConnection(){
+        struct addrinfo hints, *servinfo, *p;
+        struct addrinfo hints2, *servinfo2, *p2;
+        struct sockaddr_storage their_addr; // connector's address information
+        struct sockaddr_storage their_addr2;
+        socklen_t sin_size;
+        struct sigaction sa;
+        socklen_t sin_size2;
+        struct sigaction sa2;
+        char s[INET6_ADDRSTRLEN];
+        char s2[INET6_ADDRSTRLEN];
+        int yes=1;
+        int rv;
         memset(&hints, 0, sizeof hints);
         hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = SOCK_STREAM;
@@ -91,7 +89,6 @@ public:
         gettimeofday(&time_1, NULL);
         printf("Recieved connection\n");
 
-        //---------------------------------------------------browsertoproxyends-----------------------------------//
         memset(&hints2, 0, sizeof hints2);
         hints2.ai_family = AF_UNSPEC;
         hints2.ai_socktype = SOCK_STREAM;
@@ -122,6 +119,7 @@ public:
         inet_ntop(p2->ai_family, get_in_addr((struct sockaddr *)p2->ai_addr), s2, sizeof s2);
 
     }
+
     void *get_in_addr(struct sockaddr *sa)
     {
         if (sa->sa_family == AF_INET) {
@@ -130,8 +128,8 @@ public:
 
         return &(((struct sockaddr_in6*)sa)->sin6_addr);
     }
-    int sendall(int s, char *buf, int len)
-    {
+
+    int sendall(int s, char *buf, int len){
         int total = 0;        // how many bytes we've sent
         int bytesleft = len; // how many we have left to send
         int n;
@@ -147,6 +145,7 @@ public:
 
         return n==-1?-1:0; // return -1 on failure, 0 on success
     }
+
     int get_content_length(const std::string &text) {
         unsigned long content_loc = text.find("Content-Length: ");
         char * cstr = new char [text.length()+1];
@@ -163,6 +162,7 @@ public:
 
         return 0;
     }
+
     void runProxy(){
         while(1){
             numbytesreq = recv(sockBrow, req, APMAX, 0);
