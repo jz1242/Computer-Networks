@@ -187,12 +187,32 @@ public:
         close(sockProx);
         close(sockServ);
     }
+    void sendVideo(){
+        int numbytes = recv(sockServ, resp, APMAX, 0);
+        std::string header = std::string(resp).substr(0, std::string(resp).find("\r\n\r\n") + strlen("\r\n\r\n"));
+        //std::string content = response_text.substr(response_text.find("\r\n\r\n") + strlen("\r\n\r\n"));
+
+        //printf("%s\n", resp);
+        int contLen = getContentLen(std::string(resp));
+        int bytesPassed = numbytes - header.length();
+
+        send(sockBrow, resp, numbytes, 0);
+
+        while(bytesPassed < contLen) {
+            numbytes = recv(sockServ, resp, APMAX, 0);
+            bytesPassed += numbytes;
+            send(sockBrow, resp, numbytes, 0);
+        }
+    }
 
     int runProxy(){
+        std::ofstream outputFile;
+        outputFile.open(logPath);
         while(1){
             numbytesreq = recv(sockBrow, req, APMAX, 0);
             if(numbytesreq <= 0){
                 endSockets();
+                outputFile.close();
                 return 0;
             }
             std::string wrappedReq = std::string(req);
@@ -204,28 +224,11 @@ public:
                 strncpy(req, nolistreq.c_str(), APMAX);
                 numbytesreq += strlen("_nolist");
             }
-            printf("%s", req);
+            //for logging later
+            //outFile<<"here"<<std::endl;
+            //outFile.flush();
             if (send(sockServ, req, numbytesreq, 0)) {
-                int res_size = recv(sockServ, resp, APMAX, 0);
-
-                std::string response_text = resp;
-                std::string header = response_text.substr(0, response_text.find("\r\n\r\n") + strlen("\r\n\r\n"));
-                //std::string content = response_text.substr(response_text.find("\r\n\r\n") + strlen("\r\n\r\n"));
-
-                //printf("%s\n", resp);
-                int content_length = getContentLen(std::string(resp));
-                int body_length = res_size - header.length() + 1;
-
-                send(sockBrow, resp, res_size, 0);
-
-                while(body_length < content_length) {
-                    memset(resp, 0, sizeof(resp));
-                    res_size = recv(sockServ, resp, APMAX, 0);
-                    body_length += res_size;
-
-                    // send server response to browser
-                    send(sockBrow, resp, res_size, 0);
-                }
+                sendVideo();
             }
         }
     }   
