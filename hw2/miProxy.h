@@ -32,6 +32,7 @@ private:
   int numbytesresp;
   char* logPath;
   float alpha;
+  std::vector<int> bitrates;
 public:
     Proxy(char* logInp, float alphaInp, char* portInp, char* hostInp):logPath(logInp), alpha(alphaInp), port(portInp), host(hostInp){}
 
@@ -129,7 +130,7 @@ public:
         return &(((struct sockaddr_in6*)sa)->sin6_addr);
     }
 
-    int sendall(int s, char *buf, int len){
+    /*int sendall(int s, char *buf, int len){
         int total = 0;        // how many bytes we've sent
         int bytesleft = len; // how many we have left to send
         int n;
@@ -144,7 +145,7 @@ public:
         len = total; // return number actually sent here
 
         return n==-1?-1:0; // return -1 on failure, 0 on success
-    }
+    }*/
 
     int getContentLen(const std::string text) {
         int position_cl = text.find("Content-Length: ");//16
@@ -165,28 +166,57 @@ public:
         return atol(text.substr(start, end - start).c_str());
     }
 
+    std::vector<int> getBitrates(const std::string& xml) {
+        using std::string;
+        string keyword = "bitrate=\"";
+        std::vector<int> lst;
+        for(size_t tagPos = xml.find("<media"); tagPos != string::npos; tagPos = xml.find("<media", tagPos + 1)) {
+            size_t keyPos = xml.find(keyword, tagPos);
+            if(keyPos == string::npos)
+                continue;
+            int bitrateLoc = keyPos + keyword.size();
+            int len = xml.find('"', bitrateLoc) - bitrateLoc;
+            int bitrate = std::stoi(xml.substr(bitrateLoc, len));
+            lst.push_back(bitrate);
+        }
+        return lst;
+    }
+
+    void endSockets(){
+        close(sockBrow);
+        close(sockProx);
+        close(sockServ);
+    }
+
     int runProxy(){
         while(1){
             numbytesreq = recv(sockBrow, req, APMAX, 0);
             if(numbytesreq <= 0){
-                close(sockBrow);
-                close(sockProx);
-                close(sockServ);
+                endSockets();
                 return 0;
             }
-            //printf("%s\n", req);
-            if (sendall(sockServ, req, numbytesreq) >= 0) {
+            std::string wrappedReq = std::string(req);
+            int pos = wrappedReq.find(".f4m");
+            std::string nolistreq;
+            if(pos != std::string::npos){
+                bitrates = getBitrates(wrappedReq);
+                nolistreq = wrappedReq.substr(0, pos) + "_nolist" + wrappedReq.substr(pos);
+                strncpy(req, nolistreq.c_str(), APMAX);
+                numbytesreq += strlen("_nolist");
+            }
+            printf("%s", req);
+            if (send(sockServ, req, numbytesreq, 0)) {
                 int res_size = recv(sockServ, resp, APMAX, 0);
 
                 std::string response_text = resp;
                 std::string header = response_text.substr(0, response_text.find("\r\n\r\n") + strlen("\r\n\r\n"));
-                std::string content = response_text.substr(response_text.find("\r\n\r\n") + strlen("\r\n\r\n"));
+                //std::string content = response_text.substr(response_text.find("\r\n\r\n") + strlen("\r\n\r\n"));
 
-                printf("%s\n", resp);
+                //printf("%s\n", resp);
                 int content_length = getContentLen(std::string(resp));
                 int body_length = res_size - header.length() + 1;
 
-                sendall(sockBrow, resp, res_size);
+                send(sockBrow, resp, res_size, 0);
 
                 while(body_length < content_length) {
                     memset(resp, 0, sizeof(resp));
@@ -194,7 +224,7 @@ public:
                     body_length += res_size;
 
                     // send server response to browser
-                    sendall(sockBrow, resp, res_size);
+                    send(sockBrow, resp, res_size, 0);
                 }
             }
         }
