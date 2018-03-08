@@ -35,7 +35,7 @@ private:
 public:
     Proxy(char* logInp, float alphaInp, char* portInp, char* hostInp):logPath(logInp), alpha(alphaInp), port(portInp), host(hostInp){}
 
-    void setConnection(){
+    int setConnection(){
         struct addrinfo hints, *servinfo, *p;
         struct addrinfo hints2, *servinfo2, *p2;
         struct sockaddr_storage their_addr; // connector's address information
@@ -87,7 +87,6 @@ public:
         sockBrow = accept(sockProx, (struct sockaddr *)&their_addr, &sin_size);
         inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), s, sizeof s);
         gettimeofday(&time_1, NULL);
-        printf("Recieved connection\n");
 
         memset(&hints2, 0, sizeof hints2);
         hints2.ai_family = AF_UNSPEC;
@@ -96,27 +95,28 @@ public:
         rv = getaddrinfo(host, apache, &hints2, &servinfo2);
 
         for(p2 = servinfo2; p2 != NULL; p2 = p2->ai_next) {
-        if ((sockServ = socket(p2->ai_family, p2->ai_socktype,
-            p2->ai_protocol)) == -1) {
-            perror("client: socket");
-            continue;
-        }
+            if ((sockServ = socket(p2->ai_family, p2->ai_socktype,
+                p2->ai_protocol)) == -1) {
+                perror("client: socket");
+                continue;
+            }
 
-        if (connect(sockServ, p2->ai_addr, p2->ai_addrlen) == -1) {
-            perror("client: connect");
-            close(sockServ);
-            continue;
-        }
+            if (connect(sockServ, p2->ai_addr, p2->ai_addrlen) == -1) {
+                perror("client: connect");
+                close(sockServ);
+                continue;
+            }
 
-        break;
+            break;
         }
 
         if (p2 == NULL) {
-        fprintf(stderr, "client: failed to connect\n");
-        std::exit;
+            fprintf(stderr, "client: failed to connect\n");
+            return 2;
         }
 
         inet_ntop(p2->ai_family, get_in_addr((struct sockaddr *)p2->ai_addr), s2, sizeof s2);
+        return 1;
 
     }
 
@@ -146,33 +146,35 @@ public:
         return n==-1?-1:0; // return -1 on failure, 0 on success
     }
 
-    int get_content_length(const std::string &text) {
-        unsigned long content_loc = text.find("Content-Length: ");
-        char * cstr = new char [text.length()+1];
-        std::strcpy(cstr, text.substr(content_loc, 26).c_str());
+    int getContentLen(const std::string text) {
+        int position_cl = text.find("Content-Length: ");//16
 
-        char * p = std::strtok (cstr," ");
-        while (p!=0)
-        {
-            if (atoi(p)) {
-                return atoi(p);
+        char* cstr = new char [text.length()+1];
+        std::strcpy (cstr, text.c_str());
+        int start = position_cl + 16;
+        int count = start;
+        int end = 0;
+        bool found = false;
+        while(!found){
+            if(cstr[count] == '\n'){
+                end = count - 1;
+                found = true;
             }
-            p = std::strtok(NULL," ");
+            count++;
         }
-
-        return 0;
+        return atol(text.substr(start, end - start).c_str());
     }
 
-    void runProxy(){
+    int runProxy(){
         while(1){
             numbytesreq = recv(sockBrow, req, APMAX, 0);
             if(numbytesreq <= 0){
                 close(sockBrow);
                 close(sockProx);
                 close(sockServ);
-                std::exit;
+                return 0;
             }
-            printf("%s\n", req);
+            //printf("%s\n", req);
             if (sendall(sockServ, req, numbytesreq) >= 0) {
                 int res_size = recv(sockServ, resp, APMAX, 0);
 
@@ -181,7 +183,7 @@ public:
                 std::string content = response_text.substr(response_text.find("\r\n\r\n") + strlen("\r\n\r\n"));
 
                 printf("%s\n", resp);
-                int content_length = get_content_length(std::string(resp));
+                int content_length = getContentLen(std::string(resp));
                 int body_length = res_size - header.length() + 1;
 
                 sendall(sockBrow, resp, res_size);
