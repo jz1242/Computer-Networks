@@ -147,23 +147,23 @@ public:
         return n==-1?-1:0; // return -1 on failure, 0 on success
     }*/
 
-    int getContentLen(const std::string text) {
-        int position_cl = text.find("Content-Length: ");//16
+    int getContentLen(const std::string inp) {
+        int position_cl = inp.find("Content-Length: ");//16
 
-        char* cstr = new char [text.length()+1];
-        std::strcpy (cstr, text.c_str());
+        char* str = new char [inp.length()+1];
+        strcpy (str, inp.c_str());
         int start = position_cl + 16;
         int count = start;
         int end = 0;
         bool found = false;
         while(!found){
-            if(cstr[count] == '\n'){
+            if(str[count] == '\n'){
                 end = count - 1;
                 found = true;
             }
             count++;
         }
-        return atol(text.substr(start, end - start).c_str());
+        return atol(inp.substr(start, end - start).c_str());
     }
 
     std::vector<int> getBitrates(const std::string& xml) {
