@@ -26,8 +26,6 @@ private:
   char* port;
   char* host;
   double timer; 
-  char req[MAXSIZE];
-  char resp[MAXSIZE];
   char* logPath;
   float alpha;
   std::vector<int> bitrates;
@@ -128,23 +126,6 @@ public:
         return &(((struct sockaddr_in6*)sa)->sin6_addr);
     }
 
-    /*int sendall(int s, char *buf, int len){
-        int total = 0;        // how many bytes we've sent
-        int bytesleft = len; // how many we have left to send
-        int n;
-
-        while(total < len) {
-            n = send(s, buf+total, bytesleft, 0);
-            if (n == -1) { break; }
-            total += n;
-            bytesleft -= n;
-        }
-
-        len = total; // return number actually sent here
-
-        return n==-1?-1:0; // return -1 on failure, 0 on success
-    }*/
-
     int getContentLen(const std::string inp) {
         int position_cl = inp.find("Content-Length: ");//16
 
@@ -187,11 +168,9 @@ public:
         close(sockServ);
     }
     int sendFromServer(){
+        char resp[MAXSIZE];
         int numbytes = recv(sockServ, resp, APMAX, 0);
         std::string header = std::string(resp).substr(0, std::string(resp).find("\r\n\r\n") + strlen("\r\n\r\n"));
-        //std::string content = response_text.substr(response_text.find("\r\n\r\n") + strlen("\r\n\r\n"));
-
-        //printf("%s\n", resp);
         int contLen = getContentLen(std::string(resp));
         int bytesPassed = numbytes - header.length();
 
@@ -204,8 +183,8 @@ public:
         }
         return contLen + header.length();
     }
-    const char* getChunk(){
-    
+
+    const char* getChunk(char* req){
         std::string inp = std::string(req);
         int position_chunk = inp.find(" ");//16
         char* str = new char [inp.length()+1];
@@ -221,10 +200,7 @@ public:
             }
             count++;
         }
-        //printf("%s \n", inp.substr(start, end - start + 1).c_str());
         return inp.substr(start, end - start + 1).c_str();
-
-
     }
     int getRate(double throughput){
         for(int i = 0; i < bitrates.size(); i++){
@@ -234,24 +210,12 @@ public:
         }
         return 0;
     }
-    int segReq(double throughput, int numbytes){
-        std::string req_text = std::string(req);
-        //std::string rate = std::to_string(getRate(throughput));
-        std::string rate = "500";
-        int pos_seg = req_text.find("Seg");
-        int start = pos_seg;
-        while(req[start] != '/'){
-            start--;
-        }
-        std::string newRate = req_text.substr(0, start + 1) + rate + req_text.substr(pos_seg);
-        strncpy(req, newRate.c_str(), APMAX);
-        //printf("%s \n", req_text.substr(start + 1, pos_seg - start).c_str());
-        return numbytes += std::abs(rate.length() - (pos_seg - start - 1));//fix
-    }
 
     int runProxy(){
         int numbytesreq;
         int numbytesresp;
+        char req[MAXSIZE];
+        char resp[MAXSIZE];
         struct timeval  time_start, time_fin;
         std::ofstream outputFile;
         double throughputest = 0;
@@ -272,31 +236,38 @@ public:
                 send(sockServ, req, numbytesreq, 0);
                 recv(sockServ, resp, APMAX, 0);
                 bitrates = getBitrates(resp);
-                //printf("%d %d %d %d\n", bitrates[0], bitrates[1], bitrates[2], bitrates[3]);
                 nolistreq = wrappedReq.substr(0, pos) + "_nolist" + wrappedReq.substr(pos);
                 strncpy(req, nolistreq.c_str(), APMAX);
-                numbytesreq += strlen("_nolist");//fix
+                numbytesreq += strlen("_nolist");
             }
-            const char* chunk = getChunk();
-            //for logging later
-            //outFile<<"here"<<std::endl;
-            //outFile.flush();
+            
             std::string req_text = std::string(req);
             int pos_seg = req_text.find("Seg");
             if(pos_seg != std::string::npos){
-                //printf("%d %d %d %d\n", bitrates[0], bitrates[1], bitrates[2], bitrates[3]);
-                numbytesreq = segReq(throughputest, numbytesreq);
+                std::string req_text = std::string(req);
+                std::string rate = std::to_string(getRate(throughputest));
+                int pos_seg = req_text.find("Seg");
+                int start = pos_seg;
+                while(req[start] != '/'){
+                    start--;
+                }
+                std::string newRate = req_text.substr(0, start + 1) + rate + req_text.substr(pos_seg);
+                strncpy(req, newRate.c_str(), APMAX);
+                numbytesreq += (rate.length() - (pos_seg - start - 1));
             }
-            printf("%s", req);
+            
             send(sockServ, req, numbytesreq, 0);
             int passed = sendFromServer();
             gettimeofday(&time_fin, NULL);
             double elapsed = (double) (time_fin.tv_usec - time_start.tv_usec) / 1000000 + (double) (time_fin.tv_sec - time_start.tv_sec);
             double throughput_curr = ((double) passed / elapsed)/1000;
+            const char* chunk = getChunk(req);
+            outputFile<<elapsed<<" "<<throughput_curr<<" "<<throughputest<<" "<<getRate(throughputest)<<" "<<host<<" "<<chunk<<std::endl;
+            outputFile.flush();
             throughputest = (alpha*throughput_curr) + (1 - alpha)*throughputest;
-            //printf("%f  %f\n", throughputest, throughput_curr);
-            
+
        }
+       outputFile.close();
     }   
 };
 
