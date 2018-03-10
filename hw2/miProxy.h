@@ -170,12 +170,11 @@ public:
     int sendFromServer(){
         char resp[MAXSIZE];
         int numbytes = recv(sockServ, resp, APMAX, 0);
+        //printf("%s\n", resp);
         std::string header = std::string(resp).substr(0, std::string(resp).find("\r\n\r\n") + strlen("\r\n\r\n"));
         int contLen = getContentLen(std::string(resp));
         int bytesPassed = numbytes - header.length();
-
         send(sockBrow, resp, numbytes, 0);
-
         while(bytesPassed < contLen) {
             numbytes = recv(sockServ, resp, APMAX, 0);
             bytesPassed += numbytes;
@@ -208,10 +207,11 @@ public:
                 return bitrates[i];
             }
         }
-        return 0;
+        return bitrates[bitrates.size() - 1];
     }
 
     int runProxy(){
+        int passed = 0;
         int numbytesreq;
         int numbytesresp;
         char req[MAXSIZE];
@@ -219,6 +219,7 @@ public:
         struct timeval  time_start, time_fin;
         std::ofstream outputFile;
         double throughputest = 0;
+        throughputest = 0;
         outputFile.open(logPath);
         while(1){
             numbytesreq = recv(sockBrow, req, APMAX, 0);
@@ -232,15 +233,28 @@ public:
             int pos = wrappedReq.find(".f4m");
             std::string nolistreq;
             if(pos != std::string::npos){
-                bitrates = getBitrates(wrappedReq);
                 send(sockServ, req, numbytesreq, 0);
-                recv(sockServ, resp, APMAX, 0);
-                bitrates = getBitrates(resp);
+                numbytesresp = recv(sockServ, resp, APMAX, 0);
+
+
+                std::string temp;
+                std::string header = std::string(resp).substr(0, std::string(resp).find("\r\n\r\n") + strlen("\r\n\r\n"));
+                temp += header;
+                int contLen = getContentLen(std::string(resp));
+                int bytesPassed = numbytesresp - header.length();
+                while(bytesPassed < contLen) {
+                    temp += std::string(resp);
+                    numbytesresp = recv(sockServ, resp, APMAX, 0);
+                    bytesPassed += numbytesresp;
+                    
+                }
+                temp += std::string(resp);
+                bitrates = getBitrates(temp.c_str());
                 nolistreq = wrappedReq.substr(0, pos) + "_nolist" + wrappedReq.substr(pos);
                 strncpy(req, nolistreq.c_str(), APMAX);
                 numbytesreq += strlen("_nolist");
             }
-            
+
             std::string req_text = std::string(req);
             int pos_seg = req_text.find("Seg");
             if(pos_seg != std::string::npos){
@@ -255,16 +269,20 @@ public:
                 strncpy(req, newRate.c_str(), APMAX);
                 numbytesreq += (rate.length() - (pos_seg - start - 1));
             }
-            
             send(sockServ, req, numbytesreq, 0);
-            int passed = sendFromServer();
+            passed = sendFromServer() + numbytesreq;
+            
             gettimeofday(&time_fin, NULL);
             double elapsed = (double) (time_fin.tv_usec - time_start.tv_usec) / 1000000 + (double) (time_fin.tv_sec - time_start.tv_sec);
             double throughput_curr = ((double) passed / elapsed)/1000;
             const char* chunk = getChunk(req);
-            outputFile<<elapsed<<" "<<throughput_curr<<" "<<throughputest<<" "<<getRate(throughputest)<<" "<<host<<" "<<chunk<<std::endl;
+            int br = 0;
+            if(bitrates.size() > 0){
+                br = getRate(throughputest);
+            }
+            outputFile<<elapsed<<" "<<throughput_curr<<" "<<throughputest<<" "<<br<<" "<<host<<" "<<chunk<<std::endl;
             outputFile.flush();
-            throughputest = (alpha*throughput_curr) + (1 - alpha)*throughputest;
+            throughputest = (alpha*throughput_curr) + (1 - alpha)*throughputest;;
 
        }
        outputFile.close();
