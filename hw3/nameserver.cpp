@@ -15,15 +15,21 @@
 #include <algorithm>
 
 
-
 #define BACKLOG 10
 #define APMAX 32000
 #define MAXSIZE 32000
+#define MYPORT "4000"    // the port users will be connecting to
+
+#define MAXBUFLEN 100
 
 struct timeval  time_1, time_2;
-int sockName;
 double timer; 
 char* logPath;
+int sockfd;
+struct addrinfo hints, *servinfo, *p;
+struct sockaddr_storage their_addr;
+socklen_t addr_len;   
+char s[INET6_ADDRSTRLEN];
 
 
 int setConnection(char* port);
@@ -38,86 +44,78 @@ void *get_in_addr(struct sockaddr *sa)
 }
 
 int main(int argc, char** argv) {
-  if (argc != 5)
-  {
+    if (argc != 5)
+    {
     perror("Usage: ./nameserver <log> <port> <geography_based> <servers>");
     return -1;
-  }
-  logPath = argv[1];
-  char* port = argv[2];
-  int geo = atoi(argv[3]);
-  char* file = argv[4];
-  char buf[1000];
-  int numbytes;
-  setConnection(port);
-  while(1) {
-  /*if(buf[numbytes - 1] == '1'){
-    gettimeofday(&time_2, NULL);
-    char end[MAXSIZE];
-    memset(end, '1', sizeof(end));
-    numbytes = send(new_fd, end, MAXSIZE, 0);
-    close(new_fd);
-    close(sockfd);
-    totalbytes -= numbytes;
-    printf("recieved=%ld KB ", totalbytes/1000);
-    printf("rate=%lf Mbps\n", ((8*totalbytes)/1000000)/((double) (time_2.tv_usec - time_1.tv_usec) / 1000000 +
-        (double) (time_2.tv_sec - time_1.tv_sec)));
-    return 0;
-  }*/
-  numbytes = recv(sockName, buf, 1000, 0);
-  buf[numbytes] = '\0';
-  printf("%s", buf);
+    }
+    logPath = argv[1];
+    char* port = argv[2];
+    int geo = atoi(argv[3]);
+    char* file = argv[4];
+    char buf[MAXBUFLEN];
+    int numbytes;
 
-}
+    setConnection(port);
+
+    printf("listener: waiting to recvfrom...\n");
+
+    addr_len = sizeof their_addr;
+    if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN-1 , 0,
+        (struct sockaddr *)&their_addr, &addr_len)) == -1) {
+        perror("recvfrom");
+        exit(1);
+    }
+
+
+    //print message
+    printf("listener: got packet from %s\n",
+        inet_ntop(their_addr.ss_family,
+            get_in_addr((struct sockaddr *)&their_addr),
+            s, sizeof s));
+    printf("listener: packet is %d bytes long\n", numbytes);
+    buf[numbytes] = '\0';
+    printf("listener: packet contains \"%s\"\n", buf);
+
+    close(sockfd);
   return 0;
 }
 
 int setConnection(char* port){
-  struct addrinfo hints, *servinfo, *p;
-  struct sockaddr_storage their_addr; 
-  socklen_t sin_size;
-  struct sigaction sa;
-  char s[INET6_ADDRSTRLEN];
-  int yes=1;
-  int rv;
-  int sockfd;
-  memset(&hints, 0, sizeof hints);
-  hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_flags = AI_PASSIVE;
+    int rv;
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC; // set to AF_INET to force IPv4
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_flags = AI_PASSIVE; // use my IP
 
-  rv = getaddrinfo(NULL, port, &hints, &servinfo);
+    if ((rv = getaddrinfo(NULL, port, &hints, &servinfo)) != 0) {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+        return 1;
+    }
 
-  for(p = servinfo; p != NULL; p = p->ai_next) {
-      if ((sockfd = socket(p->ai_family, p->ai_socktype,
-              p->ai_protocol)) == -1) {
-          perror("server: socket");
-          continue;
-      }
+    // loop through all the results and bind to the first we can
+    for(p = servinfo; p != NULL; p = p->ai_next) {
+        if ((sockfd = socket(p->ai_family, p->ai_socktype,
+                p->ai_protocol)) == -1) {
+            perror("listener: socket");
+            continue;
+        }
 
-      if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes,
-              sizeof(int)) == -1) {
-          perror("setsockopt");
-          exit(1);
-      }
+        if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+            close(sockfd);
+            perror("listener: bind");
+            continue;
+        }
 
-      if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-          close(sockfd);
-          perror("server: bind");
-          continue;
-      }
-      break;
-  }
+        break;
+    }
 
-  freeaddrinfo(servinfo);
+    if (p == NULL) {
+        fprintf(stderr, "listener: failed to bind socket\n");
+        return 2;
+    }
 
-  if (p == NULL)  {
-      exit(1);
-  }
+    freeaddrinfo(servinfo);
 
-  listen(sockfd, BACKLOG);
-  sin_size = sizeof their_addr;
-  sockName = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
-  inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), s, sizeof s);
-
+    return 1;
 }
