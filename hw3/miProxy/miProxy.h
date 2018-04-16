@@ -13,6 +13,7 @@
 #include <fstream>
 #include <vector>
 #include <algorithm>
+#include "DNSLib.h"
 
 #define BACKLOG 10
 #define APMAX 32000

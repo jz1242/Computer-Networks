@@ -1,5 +1,9 @@
 #include "miProxy.h"
 
+struct addrinfo hints, *servinfo, *p;
+
+int setupConnection(char* dns_ip, char* dns_port);
+
 int main(int argc, char** argv){
 
   if(argc != 7){
@@ -12,12 +16,37 @@ int main(int argc, char** argv){
   char* dns_ip = argv[4];
   char* dns_port = argv[5];
   char* www_ip = argv[6];
+  char buf[APMAX];
+  int numbytes;
+  int recvbytes = 0;
 
+  int sockfd = setupConnection(dns_ip, dns_port);
+  struct DNSReq toSend = serialize();
+  strcpy(toSend.question.QNAME, www_ip);
+  if ((numbytes = sendto(sockfd, (char *) &toSend, sizeof(toSend), 0,
+            p->ai_addr, p->ai_addrlen)) == -1) {
+      perror("talker: sendto");
+      exit(1);
+  }
+  freeaddrinfo(servinfo);
+  while(recvbytes < 1){
+    recvbytes = recvfrom(sockfd, (char *) &toSend, APMAX , 0, p->ai_addr, &p->ai_addrlen);
+  }
+  close(sockfd);
+  if(toSend.header.RCODE == 3){
+    return 0;
+  }
+  char* host = toSend.record.RDATA;
+  Proxy newProxy = Proxy(logPath, alpha, port, host);
+  newProxy.setConnection();
+  newProxy.runProxy();
+  return 0;
+} 
+
+int setupConnection(char* dns_ip, char  * dns_port){
   int sockfd;
-  struct addrinfo hints, *servinfo, *p;
   int rv;
   int numbytes;
-
   memset(&hints, 0, sizeof hints);
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_DGRAM;
@@ -42,21 +71,7 @@ int main(int argc, char** argv){
       fprintf(stderr, "talker: failed to create socket\n");
       return 2;
   }
+  return sockfd;
+  
 
-  if ((numbytes = sendto(sockfd, "hello", 5, 0,
-            p->ai_addr, p->ai_addrlen)) == -1) {
-      perror("talker: sendto");
-      exit(1);
-  }
-
-  freeaddrinfo(servinfo);
-
-  printf("talker: sent %d bytes to %s\n", numbytes, dns_port);
-  close(sockfd);
-
-
-  /*Proxy newProxy = Proxy(logPath, alpha, port, host);
-  newProxy.setConnection();
-  newProxy.runProxy();*/
-  return 0;
-} 
+}
