@@ -1,0 +1,3 @@
+table_set_default reg_action _drop
+table_add reg_action _get 0 =>
+table_add reg_action _put 1 =>
